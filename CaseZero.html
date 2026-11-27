@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CASEZERO – THE UNKNOWN TRUTH</title>
+<style>
+/* ---------- COLOUR TOKENS (easy to change) ---------- */
+:root{
+  --bg:#0B0D10; --card:#151A21; --red:#B71C1C; --gold:#C9A227;
+  --text:#EAEAEA; --muted:#9299A3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse at 50% 0%,#1a0f12 0%,var(--bg) 60%);color:var(--text);
+  font-family:Georgia,"Times New Roman",serif;min-height:100vh;line-height:1.5}
+h1,h2,h3,.mono,button,label,select,input{font-family:"Courier New",Courier,monospace}
+h2{color:var(--gold);letter-spacing:2px;margin-bottom:12px}
+h3{color:var(--text);letter-spacing:1px;margin-bottom:6px}
+p{color:var(--muted);margin-bottom:10px}
+
+/* ---------- SCREENS & TRANSITIONS ---------- */
+.screen{display:none;padding:24px 16px;max-width:1000px;margin:0 auto;min-height:100vh}
+.screen.active{display:block;animation:fadeIn .7s ease}
+.center{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.center.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes glow{0%,100%{box-shadow:0 0 10px var(--red)}50%{box-shadow:0 0 28px var(--red),0 0 44px #b71c1c66}}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}94%{opacity:.4}96%{opacity:1}98%{opacity:.6}}
+
+/* ---------- BUTTONS ---------- */
+button{background:var(--red);color:#fff;border:1px solid #ff5252;padding:12px 22px;font-size:15px;
+  letter-spacing:2px;cursor:pointer;transition:.25s;box-shadow:0 0 12px #b71c1c99}
+button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 26px var(--red)}
+button:disabled{background:#2a2f37;border-color:#3a404a;color:var(--muted);cursor:not-allowed;box-shadow:none}
+button.big{font-size:20px;padding:18px 36px;animation:glow 2.2s infinite}
+button.ghost{background:transparent;border-color:var(--gold);color:var(--gold);box-shadow:none}
+
+/* ---------- LANDING ---------- */
+#start h1{font-size:clamp(46px,12vw,110px);letter-spacing:10px;color:var(--red);
+  text-shadow:0 0 25px #b71c1c;animation:flicker 5s infinite}
+.tagline{color:var(--gold);letter-spacing:3px;margin:10px 0 24px;font-family:"Courier New",monospace}
+.intro{max-width:560px;margin-bottom:30px}
+.warning{margin-top:26px;font-size:12px;color:var(--muted);border:1px dashed var(--muted);padding:6px 12px;font-family:"Courier New",monospace}
+
+/* ---------- CARDS / CLASSIFIED DOCUMENTS ---------- */
+.card,.doc{background:var(--card);border:1px solid #262d38;padding:18px;position:relative;box-shadow:0 6px 18px #000a}
+.doc{border-left:4px solid var(--gold)}
+.doc::after{content:"CLASSIFIED";position:absolute;top:10px;right:12px;color:#b71c1c88;
+  border:2px solid #b71c1c88;padding:0 6px;font:bold 11px "Courier New",monospace;transform:rotate(6deg)}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.row span{font-family:"Courier New",monospace;font-size:14px}
+.gold{color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:26px}
+.avatar{width:54px;height:54px;border-radius:50%;background:#222a35;border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;color:var(--gold);font:bold 18px "Courier New",monospace;margin-bottom:8px}
+.suspect small{display:block;color:var(--muted);font-size:13px;margin-top:4px}
+.suspect b{color:var(--gold);font-family:"Courier New",monospace;font-size:12px}
+
+/* ---------- PROGRESS ---------- */
+.bar{height:14px;background:#222a35;border:1px solid #333;margin:8px 0 4px}
+.bar div{height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .8s ease}
+
+/* ---------- CLUES ---------- */
+.clue{cursor:pointer;transition:.25s}
+.clue.locked{opacity:.45;cursor:default;border-left-color:#444}
+.clue.locked::after{content:"LOCKED";color:#777;border-color:#777}
+.clue:not(.locked):hover{transform:translateY(-3px);border-left-color:var(--red)}
+
+/* ---------- MODAL ---------- */
+#modal{display:none;position:fixed;inset:0;background:#000d;z-index:50;overflow-y:auto;padding:20px}
+#modal.open{display:block;animation:fadeIn .4s}
+.panel{display:none;max-width:620px;margin:20px auto}
+.panel.show{display:block}
+input[type=text],input[type=number],select{background:#0B0D10;color:var(--text);border:1px solid var(--gold);
+  padding:10px;font-size:15px;width:100%;margin:6px 0 10px}
+.msg{min-height:24px;margin:10px 0;font-family:"Courier New",monospace}
+.msg.bad{color:#ff5252}.msg.good{color:#6fdc8c}
+.item{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.item span{flex:2 1 220px;color:var(--text);font-size:15px}
+.item select{flex:1 1 140px;width:auto;margin:0}
+.cipher{font:bold 24px "Courier New",monospace;color:var(--gold);letter-spacing:3px;margin:12px 0;word-break:break-word}
+.pick{display:block;padding:12px;margin:8px 0;border:1px solid #333;cursor:pointer;transition:.2s}
+.pick:hover{border-color:var(--gold)}
+.pick input{margin-right:10px;accent-color:var(--red)}
+
+/* ---------- TOAST ---------- */
+#toast{position:fixed;top:-120px;left:50%;transform:translateX(-50%);background:var(--card);
+  border:2px solid var(--gold);color:var(--gold);padding:14px 26px;z-index:100;
+  font-family:"Courier New",monospace;letter-spacing:2px;box-shadow:0 0 30px var(--gold);
+  transition:top .6s cubic-bezier(.2,1.4,.4,1);text-align:center}
+#toast.show{top:18px}
+
+/* ---------- RESULT SCREENS ---------- */
+.solved h1{color:var(--gold);font-size:clamp(34px,8vw,64px);text-shadow:0 0 25px var(--gold);letter-spacing:6px}
+.failed h1{color:var(--red);font-size:clamp(28px,6vw,48px);text-shadow:0 0 25px var(--red)}
+.explain{text-align:left;max-width:700px;margin:18px 0}
+.explain li{margin:8px 0 8px 18px;color:var(--text)}
+.score{font:bold 40px "Courier New",monospace;color:var(--gold);margin:10px 0}
+@media(max-width:600px){button.big{font-size:16px;padding:14px 20px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ================= SCREEN 1: LANDING ================= -->
+<section id="start" class="screen center active">
+  <h1>CASEZERO</h1>
+  <div class="tagline">EVERYONE IS LYING. ONLY ONE LIE IS A MURDER.</div>
+  <p class="intro">A journalist has vanished from a locked-down building. The police call it a missing-person case. Four people had a reason to want him quiet, and each of them is hiding something. Not every secret is a crime.</p>
+  <button class="big" id="startBtn">START INVESTIGATION</button>
+  <div class="warning">CLASSIFIED CASE FILE – AUTHORIZED PERSONNEL ONLY</div>
+</section>
+
+<!-- ================= SCREEN 2: CASE INTRO ================= -->
+<section id="intro" class="screen center">
+  <div class="doc" style="max-width:640px;text-align:left">
+    <h2>CASE FILE CZ-001</h2>
+    <div class="row"><span class="gold">Case number:</span><span>CZ-001</span></div>
+    <div class="row"><span class="gold">Victim:</span><span>Ezhilan</span></div>
+    <div class="row"><span class="gold">Status:</span><span style="color:#ff5252">OPEN</span></div>
+    <div class="row"><span class="gold">Last seen:</span><span>9:45 PM</span></div>
+    <div class="row"><span class="gold">Location:</span><span>Apartment 404</span></div>
+    <p style="margin-top:14px">Three days ago, award-winning journalist Ezhilan vanished from his flat on a rainy Tuesday night. The door was unlocked. His laptop was still running, a cup of tea had gone cold beside it, and his phone was gone. On screen was a half-typed message that was never sent.</p>
+    <p>The police shrugged it off as a man who wanted to disappear. Then an envelope arrived at the station, with no stamp and no name:</p>
+    <p class="gold mono">"HE WAS ABOUT TO PRINT THE TRUTH. THE PERSON YOU WANT SMILED AT HIM THAT NIGHT."</p>
+    <p>You are the lead detective. Several people have stories. Some of them are true.</p>
+    <button id="beginBtn" style="margin-top:10px">BEGIN INVESTIGATION</button>
+  </div>
+</section>
+
+<!-- ================= SCREEN 3: DASHBOARD ================= -->
+<section id="dashboard" class="screen">
+  <h2>INVESTIGATION DASHBOARD</h2>
+  <div class="grid">
+    <div class="doc"><h3>CASE SUMMARY</h3>
+      <p>Case CZ-001. Journalist vanished from Apartment 404 after 9:45 PM. Four people had access, motive, or both. Separate the liars from the killer.</p></div>
+    <div class="doc"><h3>VICTIM</h3>
+      <p><span class="gold">EZHILAN</span>, investigative journalist. Won the State Press Award in 2017 for his port-contracts exposé, then launched his media start-up, Murasu Media, in 2019. Friends say he had a rule: always let a person explain themselves before he printed their name.</p></div>
+    <div class="card"><h3>PROGRESS</h3>
+      <div class="bar"><div id="barFill"></div></div>
+      <span class="mono gold" id="progressText">0%</span>
+      <p style="margin-top:8px">Score: <span class="gold mono" id="scoreText">0</span></p></div>
+  </div>
+
+  <h2>SUSPECTS</h2>
+  <div class="grid" id="suspectList"></div>
+
+  <h2>MINI-GAMES – SOLVE TO UNLOCK CLUES</h2>
+  <div class="grid" id="gameList"></div>
+
+  <h2>EVIDENCE COLLECTION</h2>
+  <div class="grid" id="clueList"></div>
+
+  <h2>FINAL ACCUSATION</h2>
+  <p id="accuseInfo">Locked until all four clues are collected.</p>
+  <button id="accuseBtn" disabled>FINAL ACCUSATION</button>
+</section>
+
+<!-- ================= MODAL (mini-games, clue viewer, accusation) ================= -->
+<div id="modal">
+  <!-- Game 1 -->
+  <div class="panel card" id="game1">
+    <h2>GAME 1: THE PASSWORD CRACK</h2>
+    <p>A locked notes file from Ezhilan's laptop. Enter the 4-digit password.</p>
+    <p class="gold mono">HINT: In an interview he said, "The year I proved myself matters more to me than the year I started."</p>
+    <input type="number" id="pwInput" placeholder="####">
+    <div class="msg" id="pwMsg"></div>
+    <button id="pwBtn">UNLOCK FILE</button> <button class="ghost closeBtn">CLOSE</button>
+  </div>
+  <!-- Game 2 -->
+  <div class="panel card" id="game2">
+    <h2>GAME 2: THE TIMELINE PUZZLE</h2>
+    <p>Reconstruct the night from the building's logs. Give each event a position from 1 (earliest) to 4 (latest). Each position is used once.</p>
+    <div id="timelineBox"></div>
+    <div class="msg" id="tlMsg"></div>
+    <button id="tlBtn">CHECK TIMELINE</button> <button class="ghost closeBtn">CLOSE</button>
+  </div>
+  <!-- Game 3 -->
+  <div class="panel card" id="game3">
+    <h2>GAME 3: THE HIDDEN MESSAGE</h2>
+    <p>A coded note was found under Ezhilan's keyboard:</p>
+    <div class="cipher">DVN ZKR NHHSV WKH ERRNV</div>
+    <p class="gold mono">HINT: Every letter was shifted forward by 3. Shift each letter back by 3 (D becomes A, E becomes B...).</p>
+    <input type="text" id="hmInput" placeholder="Type the decoded message" autocomplete="off">
+    <div class="msg" id="hmMsg"></div>
+    <button id="hmBtn">DECODE</button> <button class="ghost closeBtn">CLOSE</button>
+  </div>
+  <!-- Game 4 -->
+  <div class="panel card" id="game4">
+    <h2>GAME 4: THE EVIDENCE MATCH</h2>
+    <p>Each item below turned up during the search. Decide whose it is, using the suspect profiles and what you have learned. Each suspect is used once.</p>
+    <div id="matchBox"></div>
+    <div class="msg" id="emMsg"></div>
+    <button id="emBtn">CHECK MATCHES</button> <button class="ghost closeBtn">CLOSE</button>
+  </div>
+  <!-- Clue viewer -->
+  <div class="panel doc" id="clueView">
+    <h2 id="cvTitle"></h2>
+    <p id="cvText" style="color:var(--text)"></p>
+    <button class="ghost closeBtn">CLOSE</button>
+  </div>
+  <!-- Accusation -->
+  <div class="panel card" id="accusePanel">
+    <h2>WHO IS RESPONSIBLE FOR EZHILAN'S DISAPPEARANCE?</h2>
+    <div id="accuseOptions"></div>
+    <div class="msg" id="acMsg"></div>
+    <button id="submitAccBtn">SUBMIT ACCUSATION</button> <button class="ghost closeBtn">BACK</button>
+  </div>
+</div>
+
+<!-- ================= SCREEN: CASE SOLVED ================= -->
+<section id="solved" class="screen center solved">
+  <h1>CASE SOLVED</h1>
+  <h2>HARSHINI IS GUILTY</h2>
+  <div class="explain doc">
+    <p style="color:var(--text)"><b class="gold">MOTIVE:</b> As treasurer of the Asha Trust, Harshini had been quietly forging a signature on its withdrawals. Ezhilan, her closest friend, found out. He gave her one night to explain before he published. She used it to silence him.</p>
+    <ul>
+      <li><b class="gold">Clue 01 – The notes file:</b> Ezhilan wrote that one signature was forged and that he owed "her" a chance to explain at nine that night. Three of the suspects are women, so this alone proved nothing.</li>
+      <li><b class="gold">Clue 02 – The timeline:</b> A visitor arrived at 8:30, long before Deepti's car left at 10:30. Ezhilan's phone then left the building at 10:50, after Deepti was gone.</li>
+      <li><b class="gold">Clue 03 – The coded note:</b> "Ask who keeps the books." Deepti keeps the company books, but the note lay beside the Trust's bank statement.</li>
+      <li><b class="gold">Clue 04 – The matches:</b> Deepti's lie covered a secret sale of the company. Charan and Deepthika were cleared by logs. Only Harshini's Trust card paid for a cab to Apartment 404, and the party host says she arrived at 11 PM.</li>
+    </ul>
+  </div>
+  <div>FINAL DETECTIVE SCORE</div>
+  <div class="score" id="finalScore">0</div>
+  <p class="gold mono" id="rank"></p>
+  <div class="doc" id="scoreReport" style="max-width:560px;text-align:left"></div>
+  <button class="big restartBtn">PLAY AGAIN</button>
+</section>
+
+<!-- ================= SCREEN: CASE FAILED ================= -->
+<section id="failed" class="screen center failed">
+  <h1>INVESTIGATION FAILED. YOU HAVE ACCUSED THE WRONG PERSON.</h1>
+  <p style="margin:20px 0">A liar is not always a killer. The real culprit walks free. The case file is sealed.</p>
+  <button class="big restartBtn">RESTART CASE</button>
+</section>
+
+<script>
+// ===== GAME DATA (edit here to change the story) =====
+var suspects = [
+  {id:"deepti", name:"DEEPTI", initials:"DE", relation:"Co-founder of Murasu Media", motive:"Ezhilan had asked to see the company accounts.", alibi:"Says she was at a conference in another city all evening.", suspicious:"Wiped her phone's location history that night."},
+  {id:"charan", name:"CHARAN", initials:"CS", relation:"Former colleague, now at the Daily Sentinel", motive:"Ezhilan's old exposé got him fired from his first newspaper.", alibi:"Says he was on the night desk at the Daily Sentinel.", suspicious:"Was seen loitering outside his building last week."},
+  {id:"deepthika", name:"DEEPTHIKA", initials:"DH", relation:"Neighbour in Apartment 405", motive:"Months of fights over noise and parking.", alibi:"Says she was home watching TV.", suspicious:"Heard shouting at 9 PM but told no one."},
+  {id:"harshini", name:"HARSHINI", initials:"HB", relation:"Close friend, treasurer of the Asha Trust charity", motive:"Owes Ezhilan a large loan, which she admits openly.", alibi:"Says she was at a friend's birthday dinner all evening.", suspicious:"Ezhilan left her a voicemail that evening."}
+];
+var clues = [
+  {title:"CLUE 01: THE LOCKED NOTES", unlocked:false, text:"Recovered from Ezhilan's laptop: 'Three signatures on the Trust's withdrawals. Two I can explain. The third is forged. I will not print a name before I hear her side. She is coming at nine. If I am wrong about her, I will apologise. If I am right, the story runs on Friday.'"},
+  {title:"CLUE 02: THE NIGHT, MINUTE BY MINUTE", unlocked:false, text:"In order: a cab drops a visitor at 8:30. Voices argue in 404 at 9:00. Ezhilan types his last message at 9:45. Deepti's car leaves the basement at 10:30. Yet Ezhilan's phone only leaves the building at 10:50. The visitor register entry for 404 is a smudge, and the lift camera was 'under maintenance' that evening."},
+  {title:"CLUE 03: THE CODED NOTE", unlocked:false, text:"The decoded note reads 'ASK WHO KEEPS THE BOOKS'. It was folded inside a printout of a bank statement. The header shows a charity account, not a company account."},
+  {title:"CLUE 04: THE FINAL MATCH", unlocked:false, text:"Deepti's term sheet explains her lie: she was secretly selling Murasu Media and hid it, nothing more. Charan's badge log and Deepthika's doorbell clip clear them for the evening. The cab receipt stands alone: a Trust card paid for a ride to Apartment 404 at 8:30 PM. Harshini told police she never left her dinner. The birthday host says she arrived at 11."}
+];
+var gameNames = ["THE PASSWORD CRACK", "THE TIMELINE PUZZLE", "THE HIDDEN MESSAGE", "THE EVIDENCE MATCH"];
+// "pos" = correct position (1 = earliest)
+var events = [
+  {text:"10:30 PM – A car leaves the basement parking (CCTV: Deepti's)", pos:4},
+  {text:"9:45 PM – Ezhilan's last message is typed but never sent", pos:3},
+  {text:"8:30 PM – A cab drops a visitor at the building; register entry smudged", pos:1},
+  {text:"9:00 PM – Raised voices heard from Apartment 404", pos:2}
+];
+// "owner" = correct suspect id
+var evidence = [
+  {text:"Cab receipt to Ezhilan's building, 8:30 PM, paid with a Trust card", owner:"harshini"},
+  {text:"Doorbell clip: woman on her own balcony, 9:00–9:30 PM", owner:"deepthika"},
+  {text:"Term sheet to sell Murasu Media, signed by one director", owner:"deepti"},
+  {text:"Night-desk badge log: swipe-in 9:10 PM, Daily Sentinel", owner:"charan"}
+];
+var score = 0;      // points earned (clues + bonus)
+var penalty = 0;    // points lost to wrong tries
+var mistakes = {};   // wrong tries per mini-game
+var gameLabels = {pwMsg:"The Password Crack", tlMsg:"The Timeline Puzzle", hmMsg:"The Hidden Message", emMsg:"The Evidence Match"};
+function currentScore(){ return Math.max(0, score - penalty); }
+
+// ===== HELPER FUNCTIONS =====
+function $(id){ return document.getElementById(id); }
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+  $(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+function openPanel(id){
+  document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("show"); });
+  $(id).classList.add("show");
+  $("modal").classList.add("open");
+}
+function closeModal(){ $("modal").classList.remove("open"); }
+
+function setMsg(id, text, good){ $(id).textContent = text; $(id).className = "msg " + (good ? "good" : "bad"); }
+function wrong(id, text){            // wrong try: -20 points (tracked separately so it counts even before any clue is unlocked)
+  penalty += 20;
+  mistakes[id] = (mistakes[id] || 0) + 1;
+  $("scoreText").textContent = currentScore();
+  setMsg(id, text, false);
+}
+function correct(id, text, n){       // right answer: show message, then unlock clue
+  setMsg(id, text, true);
+  setTimeout(function(){ unlockClue(n); }, 900);
+}
+
+// Builds a list of rows, each with a dropdown (used by games 2 and 4)
+function buildSelects(box, prefix, items, options, label){
+  var opts = options.map(function(o){ return `<option value="${o[0]}">${o[1]}</option>`; }).join("");
+  $(box).innerHTML = items.map(function(it, i){
+    return `<div class="item"><span>${it.text}</span><select id="${prefix}${i}"><option value="">${label}</option>${opts}</select></div>`;
+  }).join("");
+}
+// Checks those dropdowns: all filled, no repeats, all correct
+function checkSelects(prefix, items, key, msg){
+  var used = [], ok = true;
+  for(var i = 0; i < items.length; i++){
+    var v = $(prefix + i).value;
+    if(v === ""){ wrong(msg, "Choose an option for every row first."); return false; }
+    if(used.indexOf(v) !== -1){ wrong(msg, "Each option can only be used once."); return false; }
+    used.push(v);
+    if(String(items[i][key]) !== v){ ok = false; }
+  }
+  if(!ok){ wrong(msg, "That does not add up. Re-read the profiles and clues."); }
+  return ok;
+}
+
+// ===== MAIN FLOW =====
+function startGame(){ showScreen("intro"); }
+function beginInvestigation(){ renderDashboard(); showScreen("dashboard"); }
+
+function renderDashboard(){
+  $("suspectList").innerHTML = suspects.map(function(p){
+    return `<div class="card suspect"><div class="avatar">${p.initials}</div><h3>${p.name}</h3>
+      <small><b>RELATION:</b> ${p.relation}</small><small><b>MOTIVE:</b> ${p.motive}</small>
+      <small><b>ALIBI:</b> ${p.alibi}</small><small><b>SUSPICIOUS:</b> ${p.suspicious}</small></div>`;
+  }).join("");
+  $("gameList").innerHTML = clues.map(function(c, i){
+    return `<div class="card"><h3>GAME ${i+1}</h3><p>${gameNames[i]}</p>
+      <button onclick="openGame(${i+1})">${c.unlocked ? "COMPLETED ✔" : "PLAY"}</button></div>`;
+  }).join("");
+  $("clueList").innerHTML = clues.map(function(c, i){
+    return c.unlocked
+      ? `<div class="doc clue" onclick="openClue(${i})"><h3 class="gold">${c.title}</h3><p>Click to read again.</p></div>`
+      : `<div class="doc clue locked"><h3>CLUE 0${i+1}</h3><p>??? Solve Game ${i+1} to reveal.</p></div>`;
+  }).join("");
+  updateProgress();
+}
+
+function openGame(n){
+  if(clues[n-1].unlocked){ openClue(n-1); return; }   // already solved: just show the clue
+  if(n === 2){ buildSelects("timelineBox", "tl", events, [[1,"1 (earliest)"],[2,"2"],[3,"3"],[4,"4 (latest)"]], "Position?"); }
+  if(n === 4){ buildSelects("matchBox", "em", evidence, suspects.map(function(s){ return [s.id, s.name]; }), "Suspect?"); }
+  openPanel("game" + n);
+}
+function openClue(i){
+  $("cvTitle").textContent = clues[i].title;
+  $("cvText").textContent = clues[i].text;
+  openPanel("clueView");
+}
+
+function unlockClue(n){
+  if(clues[n-1].unlocked){ return; }   // a clue can only be unlocked once
+  clues[n-1].unlocked = true;
+  score += 100;
+  closeModal();
+  renderDashboard();
+  $("toast").innerHTML = "🔓 CLUE UNLOCKED: " + clues[n-1].title;
+  $("toast").classList.add("show");
+  setTimeout(function(){ $("toast").classList.remove("show"); }, 3200);
+}
+
+function updateProgress(){
+  var count = clues.filter(function(c){ return c.unlocked; }).length;
+  $("barFill").style.width = count * 25 + "%";
+  $("progressText").textContent = count * 25 + "% (" + count + "/4 clues)";
+  $("scoreText").textContent = currentScore();
+  $("accuseBtn").disabled = (count < 4);
+  $("accuseInfo").textContent = count === 4 ? "All evidence collected. Make your accusation." : "Locked until all four clues are collected.";
+}
+
+// ===== MINI-GAME CHECKS =====
+function checkPassword(){
+  if($("pwInput").value.trim() === "2017"){ correct("pwMsg", "ACCESS GRANTED. File decrypted.", 1); }
+  else { wrong("pwMsg", "ACCESS DENIED. Wrong password. Try again."); }
+}
+function checkTimeline(){
+  if(checkSelects("tl", events, "pos", "tlMsg")){ correct("tlMsg", "TIMELINE CONFIRMED. Something does not fit...", 2); }
+}
+function checkHiddenMessage(){
+  if($("hmInput").value.trim().toUpperCase() === "ASK WHO KEEPS THE BOOKS"){ correct("hmMsg", "MESSAGE DECODED.", 3); }
+  else { wrong("hmMsg", "Not quite. Shift each letter back by 3 and keep the spaces."); }
+}
+function checkEvidenceMatch(){
+  if(checkSelects("em", evidence, "owner", "emMsg")){ correct("emMsg", "ALL MATCHES CONFIRMED.", 4); }
+}
+
+// ===== FINAL ACCUSATION =====
+function openAccusation(){
+  $("accuseOptions").innerHTML = suspects.map(function(s){
+    return `<label class="pick"><input type="radio" name="culprit" value="${s.id}">${s.name} – ${s.relation}</label>`;
+  }).join("");
+  $("acMsg").textContent = "";
+  openPanel("accusePanel");
+}
+function submitAccusation(){
+  var chosen = document.querySelector('input[name="culprit"]:checked');
+  if(!chosen){ setMsg("acMsg", "Select one suspect first.", false); return; }
+  closeModal();
+  if(chosen.value === "harshini"){
+    score += 200;                       // bonus for solving the case
+    var final = currentScore();
+    $("finalScore").textContent = final + " / 600";
+    $("scoreReport").innerHTML = buildReport(final);
+    $("rank").textContent = final >= 560 ? "RANK: MASTER DETECTIVE" : final >= 450 ? "RANK: SENIOR INSPECTOR" : "RANK: JUNIOR INVESTIGATOR";
+    showScreen("solved");
+  } else { showScreen("failed"); }
+}
+function buildReport(final){
+  var html = "<h3 class='gold'>SCORE REPORT</h3><p>Clues solved: 400 &nbsp;|&nbsp; Case solved bonus: 200 &nbsp;|&nbsp; Maximum: 600</p>";
+  var lines = [];
+  for(var k in mistakes){ lines.push("<li><b>" + gameLabels[k] + ":</b> " + mistakes[k] + " wrong " + (mistakes[k] === 1 ? "try" : "tries") + " (&minus;" + mistakes[k] * 20 + ")</li>"); }
+  if(lines.length === 0){ return html + "<p class='gold'>Flawless investigation. You lost no points.</p>"; }
+  return html + "<p>You lost <b class='gold'>" + (600 - final) + "</b> points because every wrong try costs 20 points:</p><ul>" + lines.join("") + "</ul><p>Replay and solve each puzzle without a wrong answer to reach 600 / 600.</p>";
+}
+function restartGame(){              // reset everything, go back to the first page
+  clues.forEach(function(c){ c.unlocked = false; });
+  score = 0;
+  penalty = 0;
+  mistakes = {};
+  $("pwInput").value = "";
+  $("hmInput").value = "";
+  document.querySelectorAll(".msg").forEach(function(m){ m.textContent = ""; });
+  closeModal();
+  showScreen("start");
+}
+
+// ===== EVENT LISTENERS =====
+var buttons = {startBtn:startGame, beginBtn:beginInvestigation, pwBtn:checkPassword, tlBtn:checkTimeline,
+  hmBtn:checkHiddenMessage, emBtn:checkEvidenceMatch, accuseBtn:openAccusation, submitAccBtn:submitAccusation};
+for(var id in buttons){ $(id).addEventListener("click", buttons[id]); }
+document.querySelectorAll(".closeBtn").forEach(function(b){ b.addEventListener("click", closeModal); });
+document.querySelectorAll(".restartBtn").forEach(function(b){ b.addEventListener("click", restartGame); });
+</script>
+</body>
+</html>
